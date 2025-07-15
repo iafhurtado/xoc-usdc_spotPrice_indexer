@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import dotenv from 'dotenv';
@@ -6,16 +6,11 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Initialize Supabase client using axios
-const supabase = axios.create({
-  baseURL: `${process.env.SUPABASE_URL}/rest/v1`,
-  headers: {
-    apikey: process.env.SUPABASE_KEY,
-    Authorization: `Bearer ${process.env.SUPABASE_KEY}`,
-    "Content-Type": "application/json",
-    Prefer: "return=minimal"
-  }
-});
+// Initialize Supabase client correctly
+const supabase = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_KEY
+);
 
 // Initialize Viem client for Base network
 const getViemClient = () => {
@@ -105,17 +100,25 @@ class LPManagerIndexer {
   async storeDataInSupabase(data) {
     try {
       console.log('Storing data in Supabase...');
+      console.log('Data to insert:', JSON.stringify(data, null, 2));
       
-      const response = await supabase.post('/price_history', [data]);
+      const { data: insertedData, error } = await supabase
+        .from('price_history')
+        .insert(data);
       
-      if (response.status !== 201) {
-        throw new Error(`Supabase error: ${response.status} - ${response.statusText}`);
+      if (error) {
+        console.error('Detailed Supabase Insert Error:', error);
+        throw error;
       }
 
-      console.log('Data stored successfully');
-      return response.data;
+      console.log('Data stored successfully', insertedData);
+      return insertedData;
     } catch (error) {
-      console.error('Error storing data in Supabase:', error.response?.data || error.message);
+      console.error('Comprehensive Error:', {
+        message: error.message,
+        details: error.details,
+        stack: error.stack
+      });
       throw error;
     }
   }

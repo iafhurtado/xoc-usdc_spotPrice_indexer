@@ -18,11 +18,12 @@
   "license": "ISC",
   "description": "Indexer for LP Manager contract data",
   "dependencies": {
+    "@supabase/supabase-js": "^2.51.0",
     "axios": "^1.6.0",
-    "viem": "^2.7.0",
-    "wagmi": "^2.5.0",
     "dotenv": "^16.3.1",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "viem": "^2.7.0",
+    "wagmi": "^2.5.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0"

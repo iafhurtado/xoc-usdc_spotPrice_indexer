@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { createClient } from '@supabase/supabase-js';
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import dotenv from 'dotenv';
@@ -6,6 +6,12 @@ import { lpManagerAbi } from '../lpmanager-abi.js';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize Supabase client correctly
+const supabase = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_KEY
+);
 
 async function testSetup() {
   console.log('🧪 Testing LP Manager Indexer Setup...\n');
@@ -35,27 +41,20 @@ async function testSetup() {
   // Test 2: Supabase Connection
   console.log('\n2. Testing Supabase connection...');
   try {
-    const supabase = axios.create({
-      baseURL: `${process.env.SUPABASE_URL}/rest/v1`,
-      headers: {
-        apikey: process.env.SUPABASE_KEY,
-        Authorization: `Bearer ${process.env.SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      }
-    });
-
-    const response = await supabase.get('/lp_manager_snapshots?select=count&limit=1');
+    const { data, error } = await supabase
+      .from('price_history')
+      .select('count')
+      .limit(1);
     
-    if (response.status !== 200) {
-      console.error('❌ Supabase connection failed:', response.status, response.statusText);
+    if (error) {
+      console.error('❌ Supabase connection failed:', error);
       console.log('Please check your Supabase URL and API key');
       allTestsPassed = false;
     } else {
       console.log('✅ Supabase connection successful');
     }
   } catch (error) {
-    console.error('❌ Supabase connection error:', error.response?.data || error.message);
+    console.error('❌ Supabase connection error:', error.message);
     allTestsPassed = false;
   }
 
@@ -112,16 +111,6 @@ async function testSetup() {
   // Test 6: Database Schema
   console.log('\n6. Testing database schema...');
   try {
-    const supabase = axios.create({
-      baseURL: `${process.env.SUPABASE_URL}/rest/v1`,
-      headers: {
-        apikey: process.env.SUPABASE_KEY,
-        Authorization: `Bearer ${process.env.SUPABASE_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      }
-    });
-
     // Check if the table exists by trying to insert a test record
     const testData = {
       contract_address: '0x0000000000000000000000000000000000000000',
@@ -136,10 +125,12 @@ async function testSetup() {
       token1_address: '0x0000000000000000000000000000000000000000'
     };
 
-    const insertResponse = await supabase.post('/price_history', [testData]);
+    const { data: insertedData, error: insertError } = await supabase
+      .from('price_history')
+      .insert(testData);
     
-    if (insertResponse.status !== 201) {
-      console.error('❌ Database schema test failed:', insertResponse.status, insertResponse.statusText);
+    if (insertError) {
+      console.error('❌ Database schema test failed:', insertError);
       console.log('Please run the SQL schema from supabase-schema.sql');
       allTestsPassed = false;
     } else {
@@ -147,14 +138,23 @@ async function testSetup() {
       
       // Clean up test data
       try {
-        await supabase.delete('/price_history?contract_address=eq.0x0000000000000000000000000000000000000000&chain_id=eq.8453');
-        console.log('✅ Test data cleaned up');
+        const { error: deleteError } = await supabase
+          .from('price_history')
+          .delete()
+          .eq('contract_address', '0x0000000000000000000000000000000000000000')
+          .eq('chain_id', 8453);
+        
+        if (deleteError) {
+          console.warn('⚠️ Could not clean up test data:', deleteError.message);
+        } else {
+          console.log('✅ Test data cleaned up');
+        }
       } catch (cleanupError) {
         console.warn('⚠️ Could not clean up test data:', cleanupError.message);
       }
     }
   } catch (error) {
-    console.error('❌ Database schema test error:', error.response?.data || error.message);
+    console.error('❌ Database schema test error:', error.message);
     allTestsPassed = false;
   }
 
