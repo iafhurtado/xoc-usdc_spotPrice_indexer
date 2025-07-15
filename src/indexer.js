@@ -48,7 +48,7 @@ class LPManagerIndexer {
       // Define token addresses for testing
       const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
       const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf";
-      const AMOUNT_IN = BigInt(10 ** 6); // 1 token with 6 decimals
+      const AMOUNT_IN = BigInt(10 ** 18); // 1 token with 6 decimals
       
       // Read fetchSpot and fetchOracle functions
       const [fetchSpotResult, fetchOracleResult] = await Promise.all([
