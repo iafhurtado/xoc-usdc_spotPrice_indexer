@@ -147,7 +147,7 @@ async function testSetup() {
       
       // Clean up test data
       try {
-        await supabase.delete('/lp_manager_snapshots?contract_address=eq.0x0000000000000000000000000000000000000000');
+        await supabase.delete('/price_history?contract_address=eq.0x0000000000000000000000000000000000000000&chain_id=eq.8453');
         console.log('✅ Test data cleaned up');
       } catch (cleanupError) {
         console.warn('⚠️ Could not clean up test data:', cleanupError.message);

@@ -33,11 +33,11 @@ import { lpManagerAbi } from '../lpmanager-abi.js';
 class LPManagerIndexer {
   constructor() {
     this.contractAddress = "0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291";
-    this.networkId = 8453;
+    this.networkId = 8453; // Base network
     this.client = getViemClient();
     
     if (!this.contractAddress) {
-      throw new Error('CONTRACT_ADDRESS is required in environment variables');
+      throw new Error('CONTRACT_ADDRESS is required');
     }
   }
 
@@ -45,10 +45,17 @@ class LPManagerIndexer {
     try {
       console.log('Reading contract data...');
       
-      // Define token addresses for testing
-      const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-      const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf";
-      const AMOUNT_IN = BigInt(10 ** 18); // 1 token with 6 decimals
+      // Define token addresses for Base network
+      // USDC (8 decimals) and XOC (18 decimals)
+      const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC
+      const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf"; // XOC
+      
+      // Use 1 USDC (8 decimals) as amount in
+      const AMOUNT_IN = BigInt(10 ** 8); // 1 USDC
+      
+      console.log(`Token0 (USDC): ${TOKEN0_ADDRESS}`);
+      console.log(`Token1 (XOC): ${TOKEN1_ADDRESS}`);
+      console.log(`Amount In: ${AMOUNT_IN} (1 USDC)`);
       
       // Read fetchSpot and fetchOracle functions
       const [fetchSpotResult, fetchOracleResult] = await Promise.all([
@@ -56,19 +63,22 @@ class LPManagerIndexer {
           address: this.contractAddress,
           abi: lpManagerAbi,
           functionName: 'fetchSpot',
-          args: [TOKEN1_ADDRESS, TOKEN0_ADDRESS, AMOUNT_IN]
+          args: [TOKEN0_ADDRESS, TOKEN1_ADDRESS, AMOUNT_IN]
         }),
         this.client.readContract({
           address: this.contractAddress,
           abi: lpManagerAbi,
           functionName: 'fetchOracle',
-          args: [TOKEN1_ADDRESS, TOKEN0_ADDRESS, AMOUNT_IN]
+          args: [TOKEN0_ADDRESS, TOKEN1_ADDRESS, AMOUNT_IN]
         })
       ]);
 
       // Get current block number and timestamp
       const blockNumber = await this.client.getBlockNumber();
       const block = await this.client.getBlock({ blockNumber });
+
+      console.log(`Fetch Spot Result: ${fetchSpotResult.toString()}`);
+      console.log(`Fetch Oracle Result: ${fetchOracleResult.toString()}`);
 
       const contractData = {
         contract_address: this.contractAddress,
@@ -113,6 +123,8 @@ class LPManagerIndexer {
   async index() {
     try {
       console.log(`Starting indexer run at ${new Date().toISOString()}`);
+      console.log(`Contract: ${this.contractAddress}`);
+      console.log(`Network: Base (${this.networkId})`);
       
       const contractData = await this.readContractData();
       await this.storeDataInSupabase(contractData);

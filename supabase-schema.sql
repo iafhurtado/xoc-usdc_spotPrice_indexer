@@ -110,3 +110,36 @@ BEGIN
     ORDER BY lms.block_time DESC;  -- Changed from 'timestamp' to 'block_time'
 END;
 $$ LANGUAGE plpgsql;
+
+-- Create the price_history table for fetchSpot and fetchOracle data
+CREATE TABLE IF NOT EXISTS price_history (
+    id BIGSERIAL PRIMARY KEY,
+    contract_address TEXT NOT NULL,
+    chain_id INTEGER NOT NULL,
+    block_number BIGINT NOT NULL,
+    timestamp TIMESTAMPTZ NOT NULL,
+    block_timestamp TIMESTAMPTZ NOT NULL,
+    
+    -- Price data
+    fetch_spot NUMERIC NOT NULL,
+    fetch_oracle NUMERIC NOT NULL,
+    amount_in NUMERIC NOT NULL,
+    token0_address TEXT NOT NULL,
+    token1_address TEXT NOT NULL,
+    
+    -- Metadata
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes for price_history table
+CREATE INDEX IF NOT EXISTS idx_price_history_contract_address ON price_history(contract_address);
+CREATE INDEX IF NOT EXISTS idx_price_history_chain_id ON price_history(chain_id);
+CREATE INDEX IF NOT EXISTS idx_price_history_timestamp ON price_history(timestamp);
+CREATE INDEX IF NOT EXISTS idx_price_history_contract_chain ON price_history(contract_address, chain_id);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE price_history ENABLE ROW LEVEL SECURITY;
+
+-- Create a policy that allows all operations
+CREATE POLICY "Allow all operations on price_history" ON price_history
+    FOR ALL USING (true);
