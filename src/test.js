@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createPublicClient, http } from 'viem';
-import { mainnet, polygon, arbitrum } from 'viem/chains';
+import { base } from 'viem/chains';
 import dotenv from 'dotenv';
 import { lpManagerAbi } from '../lpmanager-abi.js';
 
@@ -62,9 +62,8 @@ async function testSetup() {
   // Test 3: RPC Connection
   console.log('\n3. Testing RPC connection...');
   try {
-    const chainId = parseInt(process.env.CHAIN_ID) || 1;
     const client = createPublicClient({
-      chain: chainId === 137 ? polygon : chainId === 42161 ? arbitrum : mainnet,
+      chain: base,
       transport: http(process.env.RPC_URL)
     });
 
@@ -90,9 +89,8 @@ async function testSetup() {
   // Test 5: Contract Reading
   console.log('\n5. Testing contract reading...');
   try {
-    const chainId = parseInt(process.env.CHAIN_ID) || 1;
     const client = createPublicClient({
-      chain: chainId === 137 ? polygon : chainId === 42161 ? arbitrum : mainnet,
+      chain: base,
       transport: http(process.env.RPC_URL)
     });
 
@@ -127,7 +125,7 @@ async function testSetup() {
     // Check if the table exists by trying to insert a test record
     const testData = {
       contract_address: '0x0000000000000000000000000000000000000000',
-      chain_id: 1,
+      chain_id: 8453,
       block_number: 0,
       timestamp: new Date().toISOString(),
       block_timestamp: new Date().toISOString(),
@@ -163,13 +161,13 @@ async function testSetup() {
   // Test 7: Network Configuration
   console.log('\n7. Testing network configuration...');
   const chainId = parseInt(process.env.CHAIN_ID) || 1;
-  const supportedNetworks = [1, 137, 42161]; // Ethereum, Polygon, Arbitrum
+  const supportedNetworks = [8453];
   
   if (!supportedNetworks.includes(chainId)) {
     console.warn(`⚠️ Chain ID ${chainId} is not in the standard supported networks`);
-    console.log('Supported networks: 1 (Ethereum), 137 (Polygon), 42161 (Arbitrum)');
+    console.log('Supported networks: 8453(Base)');
   } else {
-    const networkNames = { 1: 'Ethereum', 137: 'Polygon', 42161: 'Arbitrum' };
+    const networkNames = { 8453: 'Base'};
     console.log(`✅ Network configuration valid: ${networkNames[chainId]} (Chain ID: ${chainId})`);
   }
 

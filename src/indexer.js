@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { createPublicClient, http } from 'viem';
-import { mainnet, polygon, arbitrum } from 'viem/chains';
+import { base } from 'viem/chains';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -17,12 +17,12 @@ const supabase = axios.create({
   }
 });
 
-// Initialize Viem client based on network
-const getViemClient = (networkId) => {
+// Initialize Viem client for Base network
+const getViemClient = () => {
   const rpcUrl = process.env.RPC_URL;
   
   return createPublicClient({
-    chain: networkId === 137 ? polygon : networkId === 42161 ? arbitrum : mainnet,
+    chain: base,
     transport: http(rpcUrl)
   });
 };
@@ -33,8 +33,8 @@ import { lpManagerAbi } from '../lpmanager-abi.js';
 class LPManagerIndexer {
   constructor() {
     this.contractAddress = process.env.CONTRACT_ADDRESS;
-    this.networkId = parseInt(process.env.CHAIN_ID) || 1;
-    this.client = getViemClient(this.networkId);
+    this.networkId = 8453; // Base network
+    this.client = getViemClient();
     
     if (!this.contractAddress) {
       throw new Error('CONTRACT_ADDRESS is required in environment variables');
@@ -46,8 +46,8 @@ class LPManagerIndexer {
       console.log('Reading contract data...');
       
       // Define token addresses for testing
-      const TOKEN0_ADDRESS = "0xF197FFC28c23E0309B5559e7a166f2c6164C80aA";
-      const TOKEN1_ADDRESS = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9";
+      const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+      const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf";
       const AMOUNT_IN = BigInt(10 ** 6); // 1 token with 6 decimals
       
       // Read fetchSpot and fetchOracle functions
