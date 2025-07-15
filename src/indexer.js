@@ -6,6 +6,14 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Debug environment variables
+console.log('🔍 Debugging Environment Variables:');
+console.log('SUPABASE_URL:', process.env.SUPABASE_URL ? `"${process.env.SUPABASE_URL}"` : 'undefined');
+console.log('SUPABASE_KEY:', process.env.SUPABASE_KEY ? `"${process.env.SUPABASE_KEY.substring(0, 20)}..."` : 'undefined');
+console.log('RPC_URL:', process.env.RPC_URL ? `"${process.env.RPC_URL}"` : 'undefined');
+console.log('CONTRACT_ADDRESS:', process.env.CONTRACT_ADDRESS ? `"${process.env.CONTRACT_ADDRESS}"` : 'undefined');
+console.log('CHAIN_ID:', process.env.CHAIN_ID ? `"${process.env.CHAIN_ID}"` : 'undefined');
+
 // Validate required environment variables
 const requiredEnvVars = {
   SUPABASE_URL: process.env.SUPABASE_URL,
@@ -21,6 +29,10 @@ const missingVars = Object.entries(requiredEnvVars)
 if (missingVars.length > 0) {
   console.error('❌ Missing required environment variables:', missingVars);
   console.error('Available environment variables:', Object.keys(process.env));
+  console.error('Environment variable details:');
+  Object.entries(requiredEnvVars).forEach(([key, value]) => {
+    console.error(`  ${key}: ${value ? `"${value}"` : 'undefined/empty'}`);
+  });
   throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
 }
 
