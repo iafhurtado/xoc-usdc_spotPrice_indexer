@@ -6,6 +6,24 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+// Validate required environment variables
+const requiredEnvVars = {
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_KEY: process.env.SUPABASE_KEY,
+  RPC_URL: process.env.RPC_URL
+};
+
+// Check for missing environment variables
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error('❌ Missing required environment variables:', missingVars);
+  console.error('Available environment variables:', Object.keys(process.env));
+  throw new Error(`Missing required environment variables: ${missingVars.join(', ')}`);
+}
+
 // Initialize Supabase client correctly
 const supabase = createClient(
   process.env.SUPABASE_URL, 
@@ -128,6 +146,9 @@ class LPManagerIndexer {
       console.log(`Starting indexer run at ${new Date().toISOString()}`);
       console.log(`Contract: ${this.contractAddress}`);
       console.log(`Network: Base (${this.networkId})`);
+      console.log(`Supabase URL: ${process.env.SUPABASE_URL ? 'Set' : 'Missing'}`);
+      console.log(`Supabase Key: ${process.env.SUPABASE_KEY ? 'Set' : 'Missing'}`);
+      console.log(`RPC URL: ${process.env.RPC_URL ? 'Set' : 'Missing'}`);
       
       const contractData = await this.readContractData();
       await this.storeDataInSupabase(contractData);
