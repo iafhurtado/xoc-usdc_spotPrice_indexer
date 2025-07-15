@@ -32,8 +32,8 @@ import { lpManagerAbi } from '../lpmanager-abi.js';
 
 class LPManagerIndexer {
   constructor() {
-    this.contractAddress = process.env.CONTRACT_ADDRESS;
-    this.networkId = 8453; // Base network
+    this.contractAddress = "0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291";
+    this.networkId = 8453;
     this.client = getViemClient();
     
     if (!this.contractAddress) {
