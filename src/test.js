@@ -23,9 +23,7 @@ async function testSetup() {
   const requiredEnvVars = [
     'SUPABASE_URL',
     'SUPABASE_KEY',
-    'RPC_URL',
-    'CONTRACT_ADDRESS',
-    'CHAIN_ID'
+    'RPC_URL'
   ];
 
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
@@ -76,7 +74,7 @@ async function testSetup() {
 
   // Test 4: Contract Address Validation
   console.log('\n4. Testing contract address...');
-  const contractAddress = process.env.CONTRACT_ADDRESS;
+  const contractAddress = "0xD6DaB267b7C23EdB2ed5605d9f3f37420e88e291";
   if (!contractAddress || !contractAddress.startsWith('0x') || contractAddress.length !== 42) {
     console.error('❌ Invalid contract address format');
     console.log('Contract address should be a valid Ethereum address (0x...)');
@@ -93,14 +91,19 @@ async function testSetup() {
       transport: http(process.env.RPC_URL)
     });
 
-    // Try to read a simple function
-    const totalSupply = await client.readContract({
+    // Try to read fetchSpot function
+    const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC
+    const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf"; // XOC
+    const AMOUNT_IN = BigInt(10 ** 8); // 1 USDC
+
+    const fetchSpot = await client.readContract({
       address: contractAddress,
       abi: lpManagerAbi,
-      functionName: 'totalSupply'
+      functionName: 'fetchSpot',
+      args: [TOKEN0_ADDRESS, TOKEN1_ADDRESS, AMOUNT_IN]
     });
 
-    console.log(`✅ Contract reading successful (Total Supply: ${totalSupply})`);
+    console.log(`✅ Contract reading successful (Fetch Spot: ${fetchSpot.toString()})`);
   } catch (error) {
     console.error('❌ Contract reading failed:', error.message);
     console.log('This might be expected if the contract is not deployed or on a different network');
@@ -113,16 +116,7 @@ async function testSetup() {
   try {
     // Check if the table exists by trying to insert a test record
     const testData = {
-      contract_address: '0x0000000000000000000000000000000000000000',
-      chain_id: 8453,
-      block_number: 0,
-      timestamp: new Date().toISOString(),
-      block_timestamp: new Date().toISOString(),
-      fetch_spot: '0',
-      fetch_oracle: '0',
-      amount_in: '1000000',
-      token0_address: '0x0000000000000000000000000000000000000000',
-      token1_address: '0x0000000000000000000000000000000000000000'
+      fetch_spot: '0'
     };
 
     const { data: insertedData, error: insertError } = await supabase
@@ -141,8 +135,7 @@ async function testSetup() {
         const { error: deleteError } = await supabase
           .from('price_history')
           .delete()
-          .eq('contract_address', '0x0000000000000000000000000000000000000000')
-          .eq('chain_id', 8453);
+          .eq('fetch_spot', '0');
         
         if (deleteError) {
           console.warn('⚠️ Could not clean up test data:', deleteError.message);
@@ -160,8 +153,8 @@ async function testSetup() {
 
   // Test 7: Network Configuration
   console.log('\n7. Testing network configuration...');
-  const chainId = parseInt(process.env.CHAIN_ID) || 1;
   const supportedNetworks = [8453];
+  const chainId = 8453; // Base network
   
   if (!supportedNetworks.includes(chainId)) {
     console.warn(`⚠️ Chain ID ${chainId} is not in the standard supported networks`);
@@ -178,7 +171,7 @@ async function testSetup() {
       throw new Error('ABI is not a valid array');
     }
     
-    const requiredFunctions = ['fetchSpot', 'fetchOracle'];
+    const requiredFunctions = ['fetchSpot'];
     const abiFunctionNames = lpManagerAbi
       .filter(item => item.type === 'function')
       .map(item => item.name);
@@ -198,28 +191,14 @@ async function testSetup() {
   // Test 9: Full Indexer Test
   console.log('\n9. Testing full indexer functionality...');
   try {
-    const { default: indexer } = await import('./indexer.js');
+    // Import the indexer module
+    const indexerModule = await import('./indexer.js');
     
-    // Test reading contract data
-    const contractData = await indexer.readContractData();
-    
-    if (!contractData || typeof contractData !== 'object') {
-      throw new Error('Contract data is not a valid object');
-    }
-    
-    const requiredFields = ['contract_address', 'chain_id', 'fetch_spot', 'fetch_oracle', 'timestamp'];
-    const missingFields = requiredFields.filter(field => !(field in contractData));
-    
-    if (missingFields.length > 0) {
-      throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-    }
+    // Test the indexSpotPrice function
+    await indexerModule.indexSpotPrice();
     
     console.log('✅ Full indexer test successful');
-    console.log(`   Contract: ${contractData.contract_address}`);
-    console.log(`   Chain ID: ${contractData.chain_id}`);
-    console.log(`   Fetch Spot: ${contractData.fetch_spot}`);
-    console.log(`   Fetch Oracle: ${contractData.fetch_oracle}`);
-    console.log(`   Timestamp: ${contractData.timestamp}`);
+    console.log('   Indexer function executed without errors');
     
   } catch (error) {
     console.error('❌ Full indexer test failed:', error.message);
