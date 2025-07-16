@@ -26,8 +26,8 @@ export async function indexSpotPrice() {
     const TOKEN0_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"; // USDC
     const TOKEN1_ADDRESS = "0xa411c9Aa00E020e4f88Bc19996d29c5B7ADB4ACf"; // XOC
 
-    // Use 1 USDC (8 decimals) as amount in
-    const AMOUNT_IN = BigInt(10 ** 8);
+    // Use 1 USDC (6 decimals) as amount in
+    const AMOUNT_IN = BigInt(10 ** 6);
 
     // Only fetch the spot price
     const fetchSpot = await viemClient.readContract({
